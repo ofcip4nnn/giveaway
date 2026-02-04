@@ -1,1 +1,221 @@
-null
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giveaway Event</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+margin:0;
+font-family:Poppins,sans-serif;
+background:linear-gradient(135deg,#4f46e5,#9333ea);
+color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.card{
+background:rgba(255,255,255,.12);
+backdrop-filter:blur(12px);
+padding:30px;
+border-radius:22px;
+width:360px;
+box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+h1{margin-top:0;font-weight:600;text-align:center}
+
+input,button{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:none;
+margin-top:10px;
+font-size:15px;
+}
+
+input{background:rgba(255,255,255,.9)}
+button{
+background:#22c55e;
+color:#000;
+font-weight:600;
+cursor:pointer;
+transition:.2s;
+}
+button:hover{transform:scale(1.03)}
+
+.menu{
+display:flex;
+gap:10px;
+margin-bottom:18px;
+}
+.menu button{
+background:#ffffff22;
+color:white;
+}
+
+.list{
+max-height:160px;
+overflow:auto;
+margin-top:12px;
+}
+.user{
+background:#ffffff22;
+padding:6px 10px;
+border-radius:10px;
+margin-top:5px;
+font-size:14px;
+}
+
+.hide{display:none}
+.winner{
+margin-top:14px;
+font-size:20px;
+font-weight:600;
+text-align:center;
+color:#22c55e;
+}
+.note{
+font-size:13px;
+opacity:.85;
+text-align:center;
+margin-top:8px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<div class="menu">
+<button onclick="openJoin()">🎁 Ikut Giveaway</button>
+<button onclick="openAdmin()">🎲 Acak Pemenang</button>
+</div>
+
+<!-- USER -->
+<div id="joinBox">
+<h1>Ikut Giveaway</h1>
+<input id="username" placeholder="Masukkan username">
+<button onclick="join()">Ikut Sekarang</button>
+<p class="note">Total peserta: <b id="total">0</b></p>
+<div class="list" id="list"></div>
+</div>
+
+<!-- LOGIN ADMIN -->
+<div id="loginBox" class="hide">
+<h1>Admin Login</h1>
+<input id="au" placeholder="Username admin">
+<input id="ap" type="password" placeholder="Password admin">
+<button onclick="login()">Login</button>
+<p class="note">Fitur ini khusus admin</p>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminBox" class="hide">
+<h1>🎉 Undi Pemenang</h1>
+<button onclick="pick()">Acak Sekarang</button>
+<div id="winner" class="winner"></div>
+<button style="margin-top:14px;background:#ef4444;color:white" onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script>
+const OWNER="ofcip4nnn";
+const REPO="giveaway";
+const FILE="database.json";
+const TOKEN="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";
+
+const ADMIN_USER="admin";
+const ADMIN_PASS="123456";
+
+const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+
+async function getDB(){
+const r=await fetch(API);
+const d=await r.json();
+return {db:JSON.parse(atob(d.content)),sha:d.sha};
+}
+
+async function saveDB(db,sha){
+await fetch(API,{
+method:"PUT",
+headers:{
+Authorization:"token "+TOKEN,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+message:"update users",
+content:btoa(JSON.stringify(db,null,2)),
+sha
+})
+});
+}
+
+function openJoin(){
+joinBox.classList.remove("hide");
+loginBox.classList.add("hide");
+adminBox.classList.add("hide");
+}
+
+function openAdmin(){
+if(!localStorage.admin){
+joinBox.classList.add("hide");
+loginBox.classList.remove("hide");
+return;
+}
+loginBox.classList.add("hide");
+joinBox.classList.add("hide");
+adminBox.classList.remove("hide");
+}
+
+function login(){
+if(au.value===ADMIN_USER && ap.value===ADMIN_PASS){
+localStorage.admin="1";
+openAdmin();
+}else alert("Login admin salah!");
+}
+
+function logout(){
+localStorage.removeItem("admin");
+openJoin();
+}
+
+async function join(){
+const name=username.value.trim();
+if(!name) return alert("Isi username!");
+
+const {db,sha}=await getDB();
+if(db.users.includes(name)) return alert("Sudah ikut!");
+
+db.users.push(name);
+await saveDB(db,sha);
+username.value="";
+load();
+}
+
+async function load(){
+const {db}=await getDB();
+list.innerHTML="";
+db.users.forEach(u=>{
+list.innerHTML+=`<div class="user">@${u}</div>`;
+});
+total.textContent=db.users.length;
+}
+
+async function pick(){
+const {db}=await getDB();
+if(db.users.length<2) return alert("Peserta belum cukup!");
+winner.textContent="🏆 "+db.users[Math.floor(Math.random()*db.users.length)];
+}
+
+load();
+</script>
+
+</body>
+</html>
