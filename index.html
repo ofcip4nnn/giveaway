@@ -2,117 +2,170 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Gacha Giveaway</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width=1.0">
+<title>🎰 Giveaway Gacha</title>
+
 <style>
+:root{
+--bg:#0b0f1a;
+--card:#131a2b;
+--glow:#00ffd5;
+--text:#e9ecff;
+}
+
 body{
 margin:0;
-background:linear-gradient(135deg,#020617,#0f172a);
-font-family:system-ui;
-color:white;
+font-family:'Segoe UI',sans-serif;
+background:radial-gradient(circle at top,#18213a,#05070f);
+color:var(--text);
 display:flex;
 justify-content:center;
 align-items:center;
-min-height:100vh
+min-height:100vh;
 }
-.card{
-background:rgba(255,255,255,.08);
-backdrop-filter:blur(16px);
-padding:30px;
-border-radius:24px;
-width:92%;
-max-width:360px;
+
+.container{
+background:rgba(19,26,43,.85);
+backdrop-filter:blur(12px);
+padding:40px;
+border-radius:20px;
+box-shadow:0 0 40px rgba(0,255,213,.15);
+width:90%;
+max-width:480px;
 text-align:center;
-box-shadow:0 0 40px rgba(56,189,248,.6)
 }
-input{
-width:100%;
-padding:14px;
-border-radius:14px;
-border:none;
-background:rgba(255,255,255,.12);
-color:white;
-outline:none;
-margin-top:12px
+
+h1{color:var(--glow)}
+
+.box{
+margin:25px 0;
+font-size:28px;
+padding:20px;
+border-radius:15px;
+background:#0d1324;
+box-shadow:inset 0 0 10px rgba(0,255,213,.3);
+min-height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
 }
+
 button{
-width:100%;
-padding:14px;
-border-radius:14px;
+background:linear-gradient(135deg,#00ffd5,#00bfff);
 border:none;
-margin-top:12px;
-background:#38bdf8;
-font-weight:bold
+padding:14px 26px;
+border-radius:40px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 0 20px rgba(0,255,213,.5);
+transition:.3s;
+margin:6px;
 }
-#gacha{
-margin:18px 0;
-border:2px dashed #38bdf8;
-border-radius:16px;
-padding:18px;
-font-size:26px
+
+button:hover{transform:scale(1.05)}
+
+input{
+padding:10px;
+border-radius:30px;
+border:none;
+outline:none;
+width:70%;
 }
-.roll{animation:f .1s infinite alternate}
-@keyframes f{from{opacity:.4}to{opacity:1}}
+
+.winners{
+background:#0d1324;
+padding:15px;
+border-radius:12px;
+max-height:180px;
+overflow:auto;
+text-align:left;
+}
+
+small{opacity:.6}
 </style>
 </head>
+
 <body>
+<div class="container">
 
-<div class="card">
-<h2>🎁 Gacha Giveaway</h2>
+<h1>🎁 Giveaway Gacha</h1>
+<small>Data dari database.json</small>
 
-<input id="name" placeholder="Nama kamu">
+<div class="box" id="display">Siap diacak!</div>
 
-<button onclick="join()">Ikut Giveaway</button>
+<button onclick="startGacha()">🎰 Gacha</button>
 
-<div id="count"></div>
+<div style="margin-top:15px">
+<input type="password" id="pass" placeholder="Admin password">
+<button onclick="unlock()">🔐 Unlock</button>
+</div>
 
-<div id="gacha">???</div>
+<h3>🏆 Pemenang</h3>
+<div class="winners" id="winnerList"></div>
 
-<button onclick="draw()">GACHA (ADMIN)</button>
 </div>
 
 <script>
-const SUPABASE_URL="https://zzkzngjlvkqscosonpqy.supabase.co"
-const SUPABASE_KEY="sb_publishable_1nkUD-tVQln_fBu-m08dRA_Epdw-NE5"
+// ===== CONFIG =====
+const RAW_JSON = "PASTE_RAW_DATABASE_JSON_URL";
+const ADMIN_PASSWORD = "admin123";
 
-const db = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+// ==================
 
-let users=[]
+let participants = [];
+let winners = [];
+let admin = false;
 
-async function load(){
- let {data}=await db.from("participants").select("name")
- users=data.map(x=>x.name)
- count.innerText="Peserta: "+users.length
-}
-load()
-
-db.channel("live")
- .on("postgres_changes",
- {event:"*",schema:"public",table:"participants"},
- load).subscribe()
-
-async function join(){
- let n=name.value.trim()
- if(!n) return alert("Isi nama!")
-
- let {error}=await db.from("participants").insert({name:n})
- if(error) return alert("Nama sudah ikut!")
+async function loadData(){
+const res = await fetch(RAW_JSON);
+const data = await res.json();
+participants = data.participants.map(p => p.name);
 }
 
-function draw(){
- if(!users.length) return
- gacha.classList.add("roll")
- let i=0
- let t=setInterval(()=>{
-  gacha.innerText=users[Math.floor(Math.random()*users.length)]
-  i++
-  if(i>22){
-   clearInterval(t)
-   gacha.classList.remove("roll")
-   gacha.innerText="🎉 "+users[Math.floor(Math.random()*users.length)]
-  }
- },90)
+loadData();
+
+function unlock(){
+if(document.getElementById("pass").value === ADMIN_PASSWORD){
+admin = true;
+alert("Admin mode aktif!");
+}else{
+alert("Password salah!");
+}
+}
+
+function startGacha(){
+if(!admin){
+alert("Fitur khusus admin!");
+return;
+}
+if(participants.length === 0){
+alert("Peserta habis!");
+return;
+}
+
+let i = 0;
+const anim = setInterval(()=>{
+document.getElementById("display").innerText =
+participants[Math.floor(Math.random()*participants.length)];
+if(++i > 25){
+clearInterval(anim);
+pickWinner();
+}
+},80);
+}
+
+function pickWinner(){
+const index = Math.floor(Math.random()*participants.length);
+const winner = participants.splice(index,1)[0];
+winners.push(winner);
+
+document.getElementById("display").innerText = "🎉 " + winner;
+renderWinners();
+}
+
+function renderWinners(){
+document.getElementById("winnerList").innerHTML =
+winners.map((w,i)=>`${i+1}. ${w}`).join("<br>");
 }
 </script>
 </body>
