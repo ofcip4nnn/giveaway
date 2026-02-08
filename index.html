@@ -3,180 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Giveaway Gacha Premium</title>
+<title>Simple Elegant Giveaway</title>
 
 <style>
-:root{
---bg:#040712;
---card:rgba(18,26,56,.9);
---glow:#00ffd5;
---accent:#4f7cff;
---text:#eef1ff;
-}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
+*{box-sizing:border-box}
 body{
+font-family:Poppins;
 margin:0;
-font-family:Inter,system-ui,Segoe UI,sans-serif;
-background:
-radial-gradient(circle at top,#1a2460,#040712);
-color:var(--text);
-display:flex;
-justify-content:center;
-align-items:center;
+background:linear-gradient(135deg,#020617,#1e293b);
+color:white;
 min-height:100vh;
 }
 
-.app{
-width:95%;
-max-width:1050px;
-display:grid;
-grid-template-columns:1.2fr .8fr;
-gap:30px;
+header{
+padding:50px 20px;
+text-align:center;
+animation:fadeDown 1s;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+padding:20px;
 }
 
 .card{
-background:var(--card);
-backdrop-filter:blur(14px);
-border-radius:26px;
-padding:34px;
-box-shadow:0 0 70px rgba(0,255,213,.14);
-border:1px solid rgba(255,255,255,.06);
-}
-
-h2{
-color:var(--glow);
-margin-top:0;
-font-size:26px;
-}
-
-.gachaBox{
-background:#070e2a;
+background:rgba(255,255,255,0.07);
+backdrop-filter:blur(12px);
 border-radius:20px;
-padding:30px;
-font-size:40px;
-font-weight:800;
-text-align:center;
-margin:22px 0;
-box-shadow:inset 0 0 20px rgba(0,255,213,.4);
-min-height:110px;
+padding:25px;
+margin-bottom:25px;
+box-shadow:0 0 25px rgba(0,0,0,.5);
+animation:fadeUp 1s;
 }
 
-.btn{
-background:linear-gradient(135deg,#00ffd5,#4f7cff);
+h1,h2{text-align:center}
+
+input,button{
+width:100%;
+padding:14px;
+border-radius:14px;
 border:none;
-padding:14px 34px;
-border-radius:60px;
 font-size:16px;
-font-weight:800;
+margin-top:12px;
+}
+
+input{
+background:#020617;
+color:white;
+border:1px solid #334155;
+}
+
+button{
+background:linear-gradient(135deg,#38bdf8,#6366f1);
+color:white;
+font-weight:600;
 cursor:pointer;
-box-shadow:0 0 28px rgba(0,255,213,.55);
 transition:.3s;
 }
 
-.btn:hover{transform:scale(1.08)}
-
-.list{
-background:#070e2a;
-border-radius:20px;
-padding:18px;
-max-height:420px;
-overflow:auto;
+button:hover{
+transform:scale(1.05);
+box-shadow:0 0 20px #38bdf8;
 }
 
-.row{
-padding:9px;
-border-bottom:1px solid rgba(255,255,255,.06);
-font-size:15px;
+.admin-btn{
+background:linear-gradient(135deg,#22c55e,#16a34a);
 }
 
-.counter{
-opacity:.7;
-font-size:13px;
-margin-bottom:10px;
+.hidden{display:none}
+
+#winner{
+font-size:28px;
+text-align:center;
+margin-top:20px;
+animation:glow 1s infinite alternate;
+}
+
+@keyframes glow{
+from{text-shadow:0 0 10px #38bdf8}
+to{text-shadow:0 0 30px #6366f1}
+}
+
+@keyframes fadeUp{
+from{opacity:0;transform:translateY(40px)}
+to{opacity:1;transform:translateY(0)}
+}
+
+@keyframes fadeDown{
+from{opacity:0;transform:translateY(-40px)}
+to{opacity:1;transform:translateY(0)}
 }
 </style>
-
-<!-- ===== DATABASE PALING ATAS ===== -->
-<script>
-const DATABASE = [
- "Asep",
- "Rina",
- "Budi",
- "Salsa",
- "Fikri",
- "Nabila",
- "Rizky",
- "Putri",
- "Agus",
- "Rama"
-];
-</script>
-
 </head>
+
 <body>
 
-<div class="app">
+<header>
+<h1>🎁 Simple Elegant Giveaway</h1>
+<p>Masukkan nama dan ikut undian sekarang!</p>
+</header>
+
+<div class="container">
 
 <div class="card">
-<h2>🎰 Gacha Draw</h2>
-
-<div class="gachaBox" id="display">Ready!</div>
-
-<button class="btn" onclick="gacha()">Start Gacha</button>
-
-<h2 style="margin-top:28px">🏆 Winners</h2>
-<div class="list" id="winnerList"></div>
+<h2>Ikut Giveaway</h2>
+<input id="name" placeholder="Nama kamu">
+<button onclick="joinGiveaway()">Join Giveaway</button>
+<p id="status"></p>
 </div>
 
 <div class="card">
-<h2>📋 Participants</h2>
-<div class="counter" id="count"></div>
-<div class="list" id="userList"></div>
+<h2>🎰 Gacha Pemenang (Admin)</h2>
+<input id="adminPass" placeholder="Password admin">
+<button class="admin-btn" onclick="loginAdmin()">Login Admin</button>
+
+<div id="adminPanel" class="hidden">
+<button onclick="drawWinner()">Acak Pemenang</button>
+<div id="winner"></div>
+</div>
 </div>
 
 </div>
 
 <script>
-let pool = [...DATABASE];
-let winners = [];
+let participants = [];
 
-renderUsers();
+async function loadData(){
+  const res = await fetch("database.json");
+  participants = await res.json();
+}
+loadData();
 
-function renderUsers(){
-document.getElementById("count").innerText = `Total peserta: ${pool.length}`;
-document.getElementById("userList").innerHTML =
-pool.map((u,i)=>`<div class="row">${i+1}. ${u}</div>`).join("");
+function joinGiveaway(){
+  const name = document.getElementById("name").value.trim();
+  if(!name){
+    alert("Masukkan nama!");
+    return;
+  }
+
+  participants.push(name);
+  status.textContent = "Berhasil ikut giveaway 🎉";
+  status.style.color="#38bdf8";
+  document.getElementById("name").value="";
 }
 
-function gacha(){
-if(pool.length === 0) return alert("Peserta habis!");
-
-let spin = 0;
-const anim = setInterval(()=>{
-document.getElementById("display").innerText =
-pool[Math.floor(Math.random()*pool.length)];
-
-if(++spin > 30){
-clearInterval(anim);
-pickWinner();
-}
-},70);
+function loginAdmin(){
+  if(adminPass.value === "admin123"){
+    adminPanel.classList.remove("hidden");
+  }else{
+    alert("Bukan admin!");
+  }
 }
 
-function pickWinner(){
-const index = Math.floor(Math.random()*pool.length);
-const win = pool.splice(index,1)[0];
-winners.push(win);
+function drawWinner(){
+  if(participants.length === 0){
+    winner.textContent = "Belum ada peserta!";
+    return;
+  }
 
-document.getElementById("display").innerText = "🎉 " + win;
+  let spin = 0;
+  const anim = setInterval(()=>{
+    winner.textContent = participants[Math.floor(Math.random()*participants.length)];
+    spin++;
 
-renderWinners();
-renderUsers();
-}
-
-function renderWinners(){
-document.getElementById("winnerList").innerHTML =
-winners.map((w,i)=>`<div class="row">${i+1}. ${w}</div>`).join("");
+    if(spin > 25){
+      clearInterval(anim);
+      const final = participants[Math.floor(Math.random()*participants.length)];
+      winner.innerHTML = "🏆 Pemenang: <b>"+final+"</b>";
+    }
+  },100);
 }
 </script>
 
