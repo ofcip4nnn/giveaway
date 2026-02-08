@@ -1,220 +1,248 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Giveaway Event</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<title>Elegant Gacha Giveaway</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
+*{box-sizing:border-box}
 body{
 margin:0;
-font-family:Poppins,sans-serif;
-background:linear-gradient(135deg,#4f46e5,#9333ea);
+background:linear-gradient(135deg,#020617,#0f172a);
+font-family:Poppins;
 color:white;
 min-height:100vh;
 display:flex;
-justify-content:center;
 align-items:center;
+justify-content:center;
 }
 
 .card{
-background:rgba(255,255,255,.12);
-backdrop-filter:blur(12px);
-padding:30px;
-border-radius:22px;
-width:360px;
-box-shadow:0 10px 30px rgba(0,0,0,.25);
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(16px);
+padding:35px;
+border-radius:26px;
+width:92%;
+max-width:380px;
+text-align:center;
+box-shadow:0 0 40px rgba(56,189,248,.6);
 }
 
-h1{margin-top:0;font-weight:600;text-align:center}
+h1{margin-bottom:8px}
 
-input,button{
+.field{
+position:relative;
+margin-top:14px;
+}
+
+.field input{
 width:100%;
-padding:12px;
-border-radius:12px;
-border:none;
-margin-top:10px;
+padding:14px;
+border-radius:14px;
+border:2px solid rgba(255,255,255,.2);
+background:rgba(255,255,255,.05);
+color:white;
 font-size:15px;
+outline:none;
 }
 
-input{background:rgba(255,255,255,.9)}
+.field label{
+position:absolute;
+left:14px;
+top:50%;
+transform:translateY(-50%);
+color:#94a3b8;
+pointer-events:none;
+transition:.25s;
+background:#0f172a;
+padding:0 6px;
+}
+
+.field input:focus,
+.field input:valid{
+border-color:#38bdf8;
+}
+
+.field input:focus+label,
+.field input:valid+label{
+top:-7px;
+font-size:12px;
+color:#38bdf8;
+}
+
 button{
-background:#22c55e;
-color:#000;
+width:100%;
+padding:14px;
+border-radius:14px;
+border:none;
+margin-top:12px;
+font-size:15px;
+background:#38bdf8;
 font-weight:600;
 cursor:pointer;
-transition:.2s;
+box-shadow:0 0 12px rgba(56,189,248,.8);
 }
-button:hover{transform:scale(1.03)}
 
-.menu{
+.counter{opacity:.8;margin-top:6px}
+
+.gachaBox{
+margin:22px 0;
+height:90px;
+border:2px dashed #38bdf8;
+border-radius:18px;
 display:flex;
-gap:10px;
-margin-bottom:18px;
+align-items:center;
+justify-content:center;
+font-size:24px;
+font-weight:600;
 }
-.menu button{
-background:#ffffff22;
-color:white;
+
+.roll{animation:flicker .12s infinite alternate}
+@keyframes flicker{
+from{color:#38bdf8}
+to{color:#facc15}
+}
+
+.boom{animation:boom .5s ease-in-out 2}
+@keyframes boom{
+0%{transform:scale(1)}
+50%{transform:scale(1.15)}
+100%{transform:scale(1)}
+}
+
+.admin{
+color:#facc15;
+margin-top:10px;
+cursor:pointer;
 }
 
 .list{
-max-height:160px;
-overflow:auto;
-margin-top:12px;
-}
-.user{
-background:#ffffff22;
-padding:6px 10px;
-border-radius:10px;
-margin-top:5px;
-font-size:14px;
-}
-
-.hide{display:none}
-.winner{
-margin-top:14px;
-font-size:20px;
-font-weight:600;
-text-align:center;
-color:#22c55e;
-}
-.note{
+display:none;
 font-size:13px;
+margin-top:12px;
+max-height:130px;
+overflow:auto;
 opacity:.85;
-text-align:center;
-margin-top:8px;
+text-align:left;
 }
 </style>
 </head>
+
 <body>
 
 <div class="card">
+<h1>🎁 Gacha Giveaway</h1>
 
-<div class="menu">
-<button onclick="openJoin()">🎁 Ikut Giveaway</button>
-<button onclick="openAdmin()">🎲 Acak Pemenang</button>
+<div class="field">
+<input id="name" required>
+<label>Masukkan nama kamu</label>
 </div>
 
-<!-- USER -->
-<div id="joinBox">
-<h1>Ikut Giveaway</h1>
-<input id="username" placeholder="Masukkan username">
-<button onclick="join()">Ikut Sekarang</button>
-<p class="note">Total peserta: <b id="total">0</b></p>
+<button onclick="join()">Ikut Giveaway</button>
+
+<div class="counter" id="count">Peserta: 0</div>
+
+<div class="gachaBox" id="box">???</div>
+
+<button id="gachaBtn" onclick="gacha()" style="display:none">GACHA (ADMIN)</button>
+
+<div class="admin" onclick="adminLogin()">Admin Panel</div>
+
 <div class="list" id="list"></div>
 </div>
 
-<!-- LOGIN ADMIN -->
-<div id="loginBox" class="hide">
-<h1>Admin Login</h1>
-<input id="au" placeholder="Username admin">
-<input id="ap" type="password" placeholder="Password admin">
-<button onclick="login()">Login</button>
-<p class="note">Fitur ini khusus admin</p>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="adminBox" class="hide">
-<h1>🎉 Undi Pemenang</h1>
-<button onclick="pick()">Acak Sekarang</button>
-<div id="winner" class="winner"></div>
-<button style="margin-top:14px;background:#ef4444;color:white" onclick="logout()">Logout</button>
-</div>
-
-</div>
-
 <script>
-const OWNER="ofcip4nnn";
-const REPO="giveaway";
-const FILE="database.json";
-const TOKEN="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";
+const USER="ofcip4nnn"
+const REPO="giveaway"
+const TOKEN="TOKEN_GITHUB"
+const PATH="database.json"
 
-const ADMIN_USER="admin";
-const ADMIN_PASS="123456";
-
-const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+let participants=[]
 
 async function getDB(){
-const r=await fetch(API);
-const d=await r.json();
-return {db:JSON.parse(atob(d.content)),sha:d.sha};
+let r=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`)
+let d=await r.json()
+return JSON.parse(atob(d.content))
 }
 
-async function saveDB(db,sha){
-await fetch(API,{
+async function saveDB(data){
+let r=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`)
+let old=await r.json()
+
+await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`,{
 method:"PUT",
 headers:{
 Authorization:"token "+TOKEN,
 "Content-Type":"application/json"
 },
 body:JSON.stringify({
-message:"update users",
-content:btoa(JSON.stringify(db,null,2)),
-sha
+message:"update participants",
+content:btoa(JSON.stringify(data,null,2)),
+sha:old.sha
 })
-});
-}
-
-function openJoin(){
-joinBox.classList.remove("hide");
-loginBox.classList.add("hide");
-adminBox.classList.add("hide");
-}
-
-function openAdmin(){
-if(!localStorage.admin){
-joinBox.classList.add("hide");
-loginBox.classList.remove("hide");
-return;
-}
-loginBox.classList.add("hide");
-joinBox.classList.add("hide");
-adminBox.classList.remove("hide");
-}
-
-function login(){
-if(au.value===ADMIN_USER && ap.value===ADMIN_PASS){
-localStorage.admin="1";
-openAdmin();
-}else alert("Login admin salah!");
-}
-
-function logout(){
-localStorage.removeItem("admin");
-openJoin();
-}
-
-async function join(){
-const name=username.value.trim();
-if(!name) return alert("Isi username!");
-
-const {db,sha}=await getDB();
-if(db.users.includes(name)) return alert("Sudah ikut!");
-
-db.users.push(name);
-await saveDB(db,sha);
-username.value="";
-load();
+})
 }
 
 async function load(){
-const {db}=await getDB();
-list.innerHTML="";
-db.users.forEach(u=>{
-list.innerHTML+=`<div class="user">@${u}</div>`;
-});
-total.textContent=db.users.length;
+participants=await getDB()
+count.innerText="Peserta: "+participants.length
+updateList()
+}
+load()
+setInterval(load,3000)
+
+async function join(){
+let n=name.value.trim()
+if(!n) return alert("Isi nama!")
+
+if(localStorage.getItem("joined"))
+ return alert("Kamu sudah ikut!")
+
+participants=await getDB()
+
+if(participants.includes(n))
+ return alert("Nama sudah terdaftar!")
+
+participants.push(n)
+await saveDB(participants)
+
+localStorage.setItem("joined","1")
+alert("Berhasil ikut giveaway!")
 }
 
-async function pick(){
-const {db}=await getDB();
-if(db.users.length<2) return alert("Peserta belum cukup!");
-winner.textContent="🏆 "+db.users[Math.floor(Math.random()*db.users.length)];
+function adminLogin(){
+let p=prompt("Password admin:")
+if(p==="admin123"){
+gachaBtn.style.display="block"
+list.style.display="block"
+}
 }
 
-load();
+function updateList(){
+list.innerHTML="<b>Peserta:</b><br>"+participants.join("<br>")
+}
+
+function gacha(){
+if(!participants.length) return
+
+box.classList.add("roll")
+
+let i=0
+let anim=setInterval(()=>{
+box.innerText=participants[Math.floor(Math.random()*participants.length)]
+i++
+if(i>22){
+clearInterval(anim)
+box.classList.remove("roll")
+let win=participants[Math.floor(Math.random()*participants.length)]
+box.innerText="🎉 "+win
+box.classList.add("boom")
+setTimeout(()=>box.classList.remove("boom"),600)
+}
+},90)
+}
 </script>
 
 </body>
