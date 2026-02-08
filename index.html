@@ -2,21 +2,23 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width=1.0">
-<title>🎰 Giveaway Gacha Elegan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Premium Giveaway Gacha</title>
 
 <style>
 :root{
---bg:#070b17;
---card:#121a33;
+--bg:#050812;
+--card:rgba(20,30,60,.85);
 --glow:#00ffd5;
---text:#e9ecff;
+--accent:#4f7cff;
+--text:#eef1ff;
 }
 
 body{
 margin:0;
-font-family:system-ui,Segoe UI,sans-serif;
-background:radial-gradient(circle at top,#1a2450,#05070f);
+font-family:Inter,system-ui,Segoe UI,sans-serif;
+background:
+radial-gradient(circle at top,#1b2555,#050812);
 color:var(--text);
 display:flex;
 justify-content:center;
@@ -24,90 +26,109 @@ align-items:center;
 min-height:100vh;
 }
 
-.app{
+.wrapper{
 width:95%;
-max-width:850px;
+max-width:1100px;
 display:grid;
 grid-template-columns:1.1fr .9fr;
-gap:25px;
+gap:30px;
 }
 
 .card{
-background:rgba(18,26,51,.92);
-backdrop-filter:blur(12px);
-border-radius:22px;
-padding:25px;
-box-shadow:0 0 40px rgba(0,255,213,.12);
+background:var(--card);
+backdrop-filter:blur(14px);
+border-radius:24px;
+padding:32px;
+box-shadow:0 0 60px rgba(0,255,213,.12);
+border:1px solid rgba(255,255,255,.05);
 }
 
-h2{color:var(--glow)}
+.title{
+font-size:26px;
+color:var(--glow);
+font-weight:700;
+margin-bottom:10px;
+}
 
 .gachaBox{
-font-size:32px;
-background:#0b132b;
-padding:22px;
-border-radius:16px;
+font-size:38px;
+font-weight:700;
+background:#070d25;
+border-radius:18px;
+padding:28px;
+margin:22px 0;
 text-align:center;
-margin:18px 0;
-min-height:90px;
-box-shadow:inset 0 0 14px rgba(0,255,213,.3);
+box-shadow:inset 0 0 18px rgba(0,255,213,.35);
+min-height:100px;
 }
 
-button{
-background:linear-gradient(135deg,#00ffd5,#00bfff);
+.btn{
+background:linear-gradient(135deg,#00ffd5,#4f7cff);
 border:none;
-padding:12px 26px;
-border-radius:40px;
+padding:14px 32px;
+border-radius:60px;
+font-size:16px;
 font-weight:700;
 cursor:pointer;
-box-shadow:0 0 18px rgba(0,255,213,.5);
+box-shadow:0 0 25px rgba(0,255,213,.5);
+transition:.3s;
 }
 
+.btn:hover{transform:scale(1.07)}
+
 input{
-padding:10px;
-border-radius:30px;
+padding:12px 20px;
+border-radius:50px;
 border:none;
 width:70%;
+margin-top:12px;
 }
 
 .list{
-max-height:320px;
+margin-top:12px;
+background:#070d25;
+border-radius:18px;
+padding:16px;
+max-height:360px;
 overflow:auto;
-background:#0b132b;
-padding:14px;
-border-radius:14px;
-font-size:14px;
 }
 
 .row{
-padding:6px 4px;
+padding:8px 6px;
 border-bottom:1px solid rgba(255,255,255,.06);
+font-size:15px;
+}
+
+.counter{
+opacity:.7;
+font-size:13px;
+margin-bottom:8px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="wrapper">
 
 <div class="card">
-<h2>🎰 Gacha Winner</h2>
+<div class="title">🎰 Gacha Draw</div>
 
-<div class="gachaBox" id="display">Siap diacak!</div>
+<div class="gachaBox" id="display">Ready!</div>
 
-<button onclick="gacha()">Gacha</button>
+<button class="btn" onclick="gacha()">Start Gacha</button>
 
-<div style="margin-top:12px">
+<br>
 <input type="password" id="pass" placeholder="Admin password">
-<button onclick="unlock()">Unlock</button>
-</div>
+<button class="btn" style="margin-top:12px" onclick="unlock()">Unlock</button>
 
-<h3>🏆 Pemenang</h3>
+<div class="title" style="margin-top:24px">🏆 Winners</div>
 <div class="list" id="winnerList"></div>
 </div>
 
 <div class="card">
-<h2>📋 Semua Peserta</h2>
+<div class="title">📋 Participants</div>
+<div class="counter" id="count"></div>
 <div class="list" id="userList"></div>
 </div>
 
@@ -117,45 +138,60 @@ border-bottom:1px solid rgba(255,255,255,.06);
 const RAW_JSON = "PASTE_RAW_DATABASE_JSON_URL";
 const ADMIN_PASSWORD = "admin123";
 
-let users = [];
 let pool = [];
 let winners = [];
 let admin = false;
 
 async function loadData(){
+try{
 const res = await fetch(RAW_JSON);
 const data = await res.json();
 
-users = data.users.map(u => u.name);
-pool = [...users];
+if(Array.isArray(data)){
+pool = data;
+}
+else if(data.users){
+pool = data.users.map(u=>u.name||u);
+}
+else if(data.participants){
+pool = data.participants.map(p=>p.name||p);
+}
+else{
+console.error("Format JSON tidak dikenali",data);
+}
 
 renderUsers();
+
+}catch(e){
+console.error("Fetch gagal",e);
+}
 }
 
 loadData();
 
 function renderUsers(){
+document.getElementById("count").innerText = `Total: ${pool.length} peserta`;
 document.getElementById("userList").innerHTML =
-users.map((u,i)=>`<div class="row">${i+1}. ${u}</div>`).join("");
+pool.map((u,i)=>`<div class="row">${i+1}. ${u}</div>`).join("");
 }
 
 function unlock(){
 if(document.getElementById("pass").value === ADMIN_PASSWORD){
 admin = true;
-alert("Admin unlocked!");
+alert("Admin mode aktif!");
 }else alert("Password salah!");
 }
 
 function gacha(){
 if(!admin) return alert("Admin only!");
-if(pool.length === 0) return alert("Peserta habis!");
+if(pool.length===0) return alert("Peserta habis!");
 
-let spin = 0;
-const anim = setInterval(()=>{
-document.getElementById("display").innerText =
+let spin=0;
+const anim=setInterval(()=>{
+document.getElementById("display").innerText=
 pool[Math.floor(Math.random()*pool.length)];
 
-if(++spin > 25){
+if(++spin>28){
 clearInterval(anim);
 pick();
 }
@@ -163,16 +199,17 @@ pick();
 }
 
 function pick(){
-const index = Math.floor(Math.random()*pool.length);
-const win = pool.splice(index,1)[0];
+const i=Math.floor(Math.random()*pool.length);
+const win=pool.splice(i,1)[0];
 winners.push(win);
 
-document.getElementById("display").innerText = "🎉 " + win;
+document.getElementById("display").innerText="🎉 "+win;
 
-renderWinner();
+renderWinners();
+renderUsers();
 }
 
-function renderWinner(){
+function renderWinners(){
 document.getElementById("winnerList").innerHTML =
 winners.map((w,i)=>`<div class="row">${i+1}. ${w}</div>`).join("");
 }
