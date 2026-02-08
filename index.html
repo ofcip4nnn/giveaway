@@ -2,248 +2,118 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elegant Gacha Giveaway</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gacha Giveaway</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box}
 body{
 margin:0;
 background:linear-gradient(135deg,#020617,#0f172a);
-font-family:Poppins;
+font-family:system-ui;
 color:white;
-min-height:100vh;
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
+min-height:100vh
 }
-
 .card{
 background:rgba(255,255,255,.08);
 backdrop-filter:blur(16px);
-padding:35px;
-border-radius:26px;
+padding:30px;
+border-radius:24px;
 width:92%;
-max-width:380px;
+max-width:360px;
 text-align:center;
-box-shadow:0 0 40px rgba(56,189,248,.6);
+box-shadow:0 0 40px rgba(56,189,248,.6)
 }
-
-h1{margin-bottom:8px}
-
-.field{
-position:relative;
-margin-top:14px;
-}
-
-.field input{
+input{
 width:100%;
 padding:14px;
 border-radius:14px;
-border:2px solid rgba(255,255,255,.2);
-background:rgba(255,255,255,.05);
+border:none;
+background:rgba(255,255,255,.12);
 color:white;
-font-size:15px;
 outline:none;
+margin-top:12px
 }
-
-.field label{
-position:absolute;
-left:14px;
-top:50%;
-transform:translateY(-50%);
-color:#94a3b8;
-pointer-events:none;
-transition:.25s;
-background:#0f172a;
-padding:0 6px;
-}
-
-.field input:focus,
-.field input:valid{
-border-color:#38bdf8;
-}
-
-.field input:focus+label,
-.field input:valid+label{
-top:-7px;
-font-size:12px;
-color:#38bdf8;
-}
-
 button{
 width:100%;
 padding:14px;
 border-radius:14px;
 border:none;
 margin-top:12px;
-font-size:15px;
 background:#38bdf8;
-font-weight:600;
-cursor:pointer;
-box-shadow:0 0 12px rgba(56,189,248,.8);
+font-weight:bold
 }
-
-.counter{opacity:.8;margin-top:6px}
-
-.gachaBox{
-margin:22px 0;
-height:90px;
+#gacha{
+margin:18px 0;
 border:2px dashed #38bdf8;
-border-radius:18px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:24px;
-font-weight:600;
+border-radius:16px;
+padding:18px;
+font-size:26px
 }
-
-.roll{animation:flicker .12s infinite alternate}
-@keyframes flicker{
-from{color:#38bdf8}
-to{color:#facc15}
-}
-
-.boom{animation:boom .5s ease-in-out 2}
-@keyframes boom{
-0%{transform:scale(1)}
-50%{transform:scale(1.15)}
-100%{transform:scale(1)}
-}
-
-.admin{
-color:#facc15;
-margin-top:10px;
-cursor:pointer;
-}
-
-.list{
-display:none;
-font-size:13px;
-margin-top:12px;
-max-height:130px;
-overflow:auto;
-opacity:.85;
-text-align:left;
-}
+.roll{animation:f .1s infinite alternate}
+@keyframes f{from{opacity:.4}to{opacity:1}}
 </style>
 </head>
-
 <body>
 
 <div class="card">
-<h1>🎁 Gacha Giveaway</h1>
+<h2>🎁 Gacha Giveaway</h2>
 
-<div class="field">
-<input id="name" required>
-<label>Masukkan nama kamu</label>
-</div>
+<input id="name" placeholder="Nama kamu">
 
 <button onclick="join()">Ikut Giveaway</button>
 
-<div class="counter" id="count">Peserta: 0</div>
+<div id="count"></div>
 
-<div class="gachaBox" id="box">???</div>
+<div id="gacha">???</div>
 
-<button id="gachaBtn" onclick="gacha()" style="display:none">GACHA (ADMIN)</button>
-
-<div class="admin" onclick="adminLogin()">Admin Panel</div>
-
-<div class="list" id="list"></div>
+<button onclick="draw()">GACHA (ADMIN)</button>
 </div>
 
 <script>
-const USER="ofcip4nnn"
-const REPO="giveaway"
-const TOKEN="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"
-const PATH="database.json"
+const SUPABASE_URL="https://zzkzngjlvkqscosonpqy.supabase.co"
+const SUPABASE_KEY="sb_publishable_1nkUD-tVQln_fBu-m08dRA_Epdw-NE5"
 
-let participants=[]
+const db = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-async function getDB(){
-let r=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`)
-let d=await r.json()
-return JSON.parse(atob(d.content))
-}
-
-async function saveDB(data){
-let r=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`)
-let old=await r.json()
-
-await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${PATH}`,{
-method:"PUT",
-headers:{
-Authorization:"token "+TOKEN,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-message:"update participants",
-content:btoa(JSON.stringify(data,null,2)),
-sha:old.sha
-})
-})
-}
+let users=[]
 
 async function load(){
-participants=await getDB()
-count.innerText="Peserta: "+participants.length
-updateList()
+ let {data}=await db.from("participants").select("name")
+ users=data.map(x=>x.name)
+ count.innerText="Peserta: "+users.length
 }
 load()
-setInterval(load,3000)
+
+db.channel("live")
+ .on("postgres_changes",
+ {event:"*",schema:"public",table:"participants"},
+ load).subscribe()
 
 async function join(){
-let n=name.value.trim()
-if(!n) return alert("Isi nama!")
+ let n=name.value.trim()
+ if(!n) return alert("Isi nama!")
 
-if(localStorage.getItem("joined"))
- return alert("Kamu sudah ikut!")
-
-participants=await getDB()
-
-if(participants.includes(n))
- return alert("Nama sudah terdaftar!")
-
-participants.push(n)
-await saveDB(participants)
-
-localStorage.setItem("joined","1")
-alert("Berhasil ikut giveaway!")
+ let {error}=await db.from("participants").insert({name:n})
+ if(error) return alert("Nama sudah ikut!")
 }
 
-function adminLogin(){
-let p=prompt("Password admin:")
-if(p==="admin123"){
-gachaBtn.style.display="block"
-list.style.display="block"
-}
-}
-
-function updateList(){
-list.innerHTML="<b>Peserta:</b><br>"+participants.join("<br>")
-}
-
-function gacha(){
-if(!participants.length) return
-
-box.classList.add("roll")
-
-let i=0
-let anim=setInterval(()=>{
-box.innerText=participants[Math.floor(Math.random()*participants.length)]
-i++
-if(i>22){
-clearInterval(anim)
-box.classList.remove("roll")
-let win=participants[Math.floor(Math.random()*participants.length)]
-box.innerText="🎉 "+win
-box.classList.add("boom")
-setTimeout(()=>box.classList.remove("boom"),600)
-}
-},90)
+function draw(){
+ if(!users.length) return
+ gacha.classList.add("roll")
+ let i=0
+ let t=setInterval(()=>{
+  gacha.innerText=users[Math.floor(Math.random()*users.length)]
+  i++
+  if(i>22){
+   clearInterval(t)
+   gacha.classList.remove("roll")
+   gacha.innerText="🎉 "+users[Math.floor(Math.random()*users.length)]
+  }
+ },90)
 }
 </script>
-
 </body>
 </html>
