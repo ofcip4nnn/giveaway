@@ -1,11 +1,11 @@
 {
-  "participants": [
-    { "name": "Asep" },
-    { "name": "Rina" },
-    { "name": "Budi" },
-    { "name": "Salsa" },
-    { "name": "Fikri" },
-    { "name": "Nabila" },
-    { "name": "Rizky" }
+  "users": [
+    { "id": 1, "name": "Asep" },
+    { "id": 2, "name": "Rina" },
+    { "id": 3, "name": "Budi" },
+    { "id": 4, "name": "Salsa" },
+    { "id": 5, "name": "Fikri" },
+    { "id": 6, "name": "Nabila" },
+    { "id": 7, "name": "Rizky" }
   ]
 }
