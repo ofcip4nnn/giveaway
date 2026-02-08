@@ -1,1 +1,11 @@
-[]
+{
+  "participants": [
+    { "name": "Asep" },
+    { "name": "Rina" },
+    { "name": "Budi" },
+    { "name": "Salsa" },
+    { "name": "Fikri" },
+    { "name": "Nabila" },
+    { "name": "Rizky" }
+  ]
+}
